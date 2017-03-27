@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>addRunner</title>
+    <link href="../static/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="../static/bootstrap/css/bootstrap-theme.min.css" rel="stylesheet">
+    <script src="../static/src/code/highcharts.js"></script>
+    <script src="../static/src/code/modules/exporting.js"></script>
+    <script type="text/javascript" src="../static/src/jquery-3.1.1.min.js"></script>
+</head>
+<body>
+
+    <div class="col-sm-1"></div>
+    <div class="col-sm-10">
+            <div class="header clearfix">
+                <nav>
+                  <ul class="nav nav-pills pull-right">
+                    <li role="presentation" ><a href="http://120.113.70.211:8000/">顯示圖表</a></li>
+                    <li role="presentation" class="active"><a href="#">新增跑者</a></li>
+                  </ul>
+                </nav>
+                <h3 class="text-muted">Project</h3>
+              </div>
+
+            <div class="page-header">
+                <h1 style="font-family:Microsoft JhengHei;">新增跑者</h1>
+                <p class="lead">NFU BI LAB</p>
+            </div>
+            <form class="form-signin" action="#" method="get">
+                {% for columnName in runnerTableColumnName %}
+                    <p class="lead">{{ columnName }}</p>
+                    <input type="text" class="form-control" id="{{ columnName }}"  style="height:4em;"  placeholder="{{ columnName }}">
+                    </br></br>
+                {% endfor %}
+                <button class="btn btn-lg btn-primary btn-block" type="submit" value="Click" id="addRunner" name="addRunner" style="height:4em;">新增跑者</button>
+            </form>
+    </div>
+    <div class="col-sm-1"></div>
+
+    <script src="../static/bootstrap/js/bootstrap.min.js"></script>
+    <script src="../static/bootstrap/js/docs.min.js"></script>
+</body>
+</html>

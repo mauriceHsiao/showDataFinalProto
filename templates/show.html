@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link href="../static/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="../static/bootstrap/css/bootstrap-theme.min.css" rel="stylesheet">
+    <script src="../static/src/code/highcharts.js"></script>
+    <script src="../static/src/code/modules/exporting.js"></script>
+    <script type="text/javascript" src="../static/src/jquery-3.1.1.min.js"></script>
+        <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="../static/bootstrap/js/bootstrap.min.js"></script>
+    <script src="../static/bootstrap/js/docs.min.js"></script>
+
+</head>
+
+<body>
+
+<!--class="col-sm-1"為bootstrap的切割語法 -->
+<div class="col-sm-1"></div>
+<div class="col-sm-10">
+    <!--跳轉網頁區塊-->
+            <div class="header clearfix">
+                <nav>
+                  <ul class="nav nav-pills pull-right">
+                    <li role="presentation" class="active"><a href="#">顯示圖表</a></li>
+                    <li role="presentation"><a href="http://120.113.70.211:8000/addRunner/">新增跑者</a></li>
+                  </ul>
+                </nav>
+                <h3 class="text-muted">Project</h3>
+              </div>
+
+    <!--上方文字標題顯示區塊-->
+        <div class="page-header">
+            <h1 style="font-family:Microsoft JhengHei;">測試資料顯示</h1>
+            <p class="lead">NFU BI LAB</p>
+        </div>
+
+        <!--跑者id的下拉式選單表單區塊，這個表單要給id因為後端抓取會以id來做識別-->
+        <form class="form-signin" id="runnerform" action="#" method="get">
+            <!--csrf_token為ajax網頁安全性認證的偽造版，如果這個表單是使用post就一定要加上這個認證，但是有時候會被當成XSS攻擊 -->
+            {% csrf_token %}
+            <p class="lead">選擇跑者ID:</p>
+            <!--顯示id的下拉式選單，autoscape視不同環境加，此作用為讓系統讀取html標籤-->
+            {% autoescape off %}{{ runneridlist }}{% endautoescape %}
+            </br>
+        </form>
+
+        <!--選完跑者後的測試id的下拉式選單表單區塊-->
+        <form class="form-signin" action="#" method="get">
+            <p class="lead">選擇該跑者的測試ID:</p>
+            <!--顯示測試id的下拉式選單，autoscape視不同環境加，此作用為讓系統讀取html標籤-->
+            {% autoescape off %}{{ testidlist }}{% endautoescape %}
+            </br>
+            <button class="btn btn-lg btn-primary btn-block" type="submit" value="Click" id="draw" name="mybtn" style="height:5em;">畫圖囉</button>
+            </br>
+        </form>
+        <p class="lead">[跑者ID, 測試ID]={{ state }}</p>
+        <!--hightcharts顯示表單區塊 -->
+        <form id="form1" runat="server">
+            <!--顯示左腳，id一定要給，在highcharts的javascript裡會指定將圖表顯示在哪個區塊裡，此時以id作為指定對象 -->
+            <div>
+                <div id="L_highchartarea" style="min-width: 310px; height: 400px; margin: 0 auto"></div>
+            </div>
+            <!--顯示右腳 -->
+            <div>
+                <div id="R_highchartarea" style="min-width: 310px; height: 400px; margin: 0 auto"></div>
+            </div>
+            <div>
+                <h1>Left Foot </h1>
+                <h6 style="display:inline">X : </h6><div id="left_reportingX" style="display:inline"></div>
+                <h6 style="display:inline">Y : </h6><div id="left_reportingY" style="display:inline"></div>
+                <h1>Right Foot </h1>
+                <h6 style="display:inline">X : </h6><div id="right_reportingX" style="display:inline"></div>
+                <h6 style="display:inline">Y : </h6><div id="right_reportingY" style="display:inline"></div>
+            </div>
+
+        </form>
+
+        <!--表格顯示區塊 -->
+        <div class="row">
+            <!--顯示BasicData表格，autoscape視不同環境加，此作用為讓系統讀取html標籤-->
+            <div class="col-md-6">
+                {% autoescape off %}{{ table_BasicData }}{% endautoescape %}
+            </div>
+            <!--顯示SpeedTest表格 -->
+            <div class="col-md-6">
+                {% autoescape off %}{{ table_SpeedTest }}{% endautoescape %}
+            </div>
+        </div>
+
+</div>
+<div class="col-sm-1"></div>
+    <script type="text/javascript">
+        //傳進來的資料leftFootTime為時間資料，但是因為編碼問題傳進來的符號會變成亂碼，所以先進行資料處理
+        //先轉字串
+        var data1Str = "{{ leftFootTime }}";
+        //接著把亂碼取代掉
+        var replaceStr = data1Str.replace(/&#39;/g," ");
+        //接著把每筆資料當中的中括號取代掉
+        replaceStr = replaceStr.replace("[","");
+        replaceStr = replaceStr.replace("]","");
+        //將整個字串做完取代後，最後再依","重新分割資料
+        var data3 = replaceStr.split(',');
+
+        $(function () {
+
+            Highcharts.chart('L_highchartarea',{
+                title: { //標題資料
+                    text: '左腳',
+                    x: -20 //center
+                },
+                subtitle: { //副標題資料
+                    text: 'KG',
+                    x: -20
+                },
+                xAxis: { //這裡是X軸要顯示的資料，將上面做完處理的字串放進X軸
+                    categories: data3
+                },
+                yAxis: { //設定Y軸，Y軸資料會自己依照給的內容作判斷，下面可以自己設定Y軸的級距
+                    title: {
+                        text: 'KG'
+                    },
+                    plotLines: [{
+                        value: 0,
+                        width: 1,
+                        color: '#808080'
+                    }]
+                },
+                plotOptions: {
+                    series: {
+                        point: {
+                            events: {
+                                mouseOver: function () {
+                                    var chart = this.series.chart;
+                                    if (!chart.lbl) {
+                                        chart.lbl = chart.renderer.label('')
+                                            .attr({
+                                                padding: 10,
+                                                r: 10,
+                                                fill: Highcharts.getOptions().colors[1]
+                                            })
+                                            .css({
+                                                color: '#FFFFFF'
+                                            })
+                                            .add();
+                                    }
+                                    var lx = this.x;
+                                    var ly = this.y;
+                                    document.getElementById("left_reportingX").innerHTML = lx;
+                                    document.getElementById("left_reportingY").innerHTML = ly;
+                                    chart.lbl
+                                        .show()
+                                        .attr({
+                                            text: 'x: ' + this.x + ', y: ' + this.y
+                                        }
+                                        );
+                                }
+                            }
+                        },
+                        events: {
+                            mouseOut: function () {
+                                if (this.chart.lbl) {
+                                    this.chart.lbl.hide();
+                                }
+                            }
+                        }
+                    }
+                },
+                tooltip: {
+                    shared: true,
+                    crosshairs: true,
+                    followTouchMove: true,
+                    enabled: false,
+                    formatter: function() {
+                                return '<b>'+ this.series.name +'</b><br/>'+
+                                this.x +': '+ this.y;
+                        },
+                    valueSuffix: ' KG'
+                },
+                legend: {
+                    layout: 'vertical',
+                    align: 'right',
+                    verticalAlign: 'middle',
+                    borderWidth: 0
+                },
+                //下面開始給資料數值，給幾組資料就顯示幾條線，這裡給的資料是從後端的views裡抓出來的內容
+                series: [{
+                    name: 'ch1',
+                    data: {{ leftFootKG }}[1]
+                },{
+                    name: 'ch2',
+                    data: {{ leftFootKG }}[2]
+                },{
+                    name: 'ch3',
+                    data: {{ leftFootKG }}[3]
+                },{
+                    name: 'ch4',
+                    data: {{ leftFootKG }}[4]
+                },{
+                    name: 'ch5',
+                    data: {{ leftFootKG }}[5]
+                },{
+                    name: 'ch6',
+                    data: {{ leftFootKG }}[6]
+                },{
+                    name: 'ch7',
+                    data: {{ leftFootKG }}[7]
+                },{
+                    name: 'ch8',
+                    data: {{ leftFootKG }}[8]
+                }]
+            });
+        })
+
+
+
+    </script> <!-- 左腳highcharts圖表 -->
+    <script type="text/javascript">
+        var data1Str = "{{ rightFootTime }}";
+        var replaceStr = data1Str.replace(/&#39;/g," ");
+        replaceStr = replaceStr.replace("[","");
+        replaceStr = replaceStr.replace("]","");
+        //window.alert(replaceStr);
+        var data3 = replaceStr.split(',');
+
+        $(function () {
+            Highcharts.chart('R_highchartarea', {
+                title: {
+                    text: '右腳',
+                    x: -20 //center
+                },
+                subtitle: {
+                    text: 'KG',
+                    x: -20
+                },
+                xAxis: {
+                    categories: data3
+                },
+                yAxis: {
+                    title: {
+                        text: 'KG'
+                    },
+                    plotLines: [{
+                        value: 0,
+                        width: 1,
+                        color: '#808080'
+                    }]
+                },
+                plotOptions: {
+                    series: {
+                        point: {
+                            events: {
+                                mouseOver: function () {
+                                    var chart = this.series.chart;
+                                    if (!chart.lbl) {
+                                        chart.lbl = chart.renderer.label('')
+                                            .attr({
+                                                padding: 10,
+                                                r: 10,
+                                                fill: Highcharts.getOptions().colors[1]
+                                            })
+                                            .css({
+                                                color: '#FFFFFF'
+                                            })
+                                            .add();
+                                    }
+                                    var rx = this.x;
+                                    var ry = this.y;
+                                    document.getElementById("right_reportingX").innerHTML = rx;
+                                    document.getElementById("right_reportingY").innerHTML = ry;
+                                    chart.lbl
+                                        .show()
+                                        .attr({
+                                            text: 'x: ' + this.x + ', y: ' + this.y
+                                        }
+                                        );
+                                }
+                            }
+                        },
+                        events: {
+                            mouseOut: function () {
+                                if (this.chart.lbl) {
+                                    this.chart.lbl.hide();
+                                }
+                            }
+                        }
+                    }
+                },
+                tooltip: {
+                    valueSuffix: ' KG'
+                },
+                legend: {
+                    layout: 'vertical',
+                    align: 'right',
+                    verticalAlign: 'middle',
+                    borderWidth: 0
+                },
+                series: [{
+                    name: 'ch1',
+                    data: {{ rightFootKG }}[1]
+                },{
+                    name: 'ch2',
+                    data: {{ rightFootKG }}[2]
+                },{
+                    name: 'ch3',
+                    data: {{ rightFootKG }}[3]
+                },{
+                    name: 'ch4',
+                    data: {{ rightFootKG }}[4]
+                },{
+                    name: 'ch5',
+                    data: {{ rightFootKG }}[5]
+                },{
+                    name: 'ch6',
+                    data: {{ rightFootKG }}[6]
+                },{
+                    name: 'ch7',
+                    data: {{ rightFootKG }}[7]
+                },{
+                    name: 'ch8',
+                    data: {{ rightFootKG }}[8]
+                }]
+            });
+        });
+
+    </script> <!-- 左腳highcharts圖表 -->
+    <script type="text/javascript">
+        //下拉式選單有一個onchange的呼叫function，呼叫此function時將跑者id的下拉式選單表單送出
+        function onchangeFunc() {
+            runnerform.submit();
+        }
+    </script>
+
+
+</body>
+</html>
